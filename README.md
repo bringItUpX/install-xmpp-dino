@@ -22,3 +22,6 @@ git config --global user.email "your_email@example.com"
 
 hint 2:
 Dino is able to do Voicecalls and Videocalls with this installation. but your server (of your xmpp account) need to support this. i.e with a linked coturn server.
+
+hint 3:
+for Videocalls with Dino for me it is only working if I put the usb cam lately in the usb port (after the PC is fully booted).
