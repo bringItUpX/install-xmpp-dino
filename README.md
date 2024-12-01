@@ -3,7 +3,7 @@ this script installs the XMPP client Dino under an Ubuntu 24.04. If the script r
 
 It will download the source in version v0.4.4, and compiles it.
 
-you only need to download the script install-dino.sh in a diretory, then open a terminal in this dirctory and run:
+you only need to download the script install-dino.sh in a diretory, then open a terminal in this directory and run:
 ```Shell
 sudo bash install-dino.sh
 ```
@@ -19,3 +19,6 @@ you need perhaps a configured git in order to download the dino sources. To conf
 git config --global user.name "your Name"
 git config --global user.email "your_email@example.com"
 ```
+
+hint 2:
+Dino is able to do Voicecalls and Videocalls with this installation. but your server (of your xmpp account) need to support this. i.e with a linked coturn server.
