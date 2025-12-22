@@ -7,6 +7,10 @@ you only need to download the script install-dino.sh in a diretory, then open a 
 ```Shell
 sudo bash install-dino.sh
 ```
+for the newer version with meson build (since dino 0.5.0) use the newer script in this repo
+```Shell
+sudo bash download-and-compile-dino0.5.2.sh
+```
 
 if all runs successful, after the above command you can run dino with the command:
 ```Shell
