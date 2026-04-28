@@ -1,5 +1,5 @@
 # install-xmpp-dino
-this script installs the XMPP client Dino under an Ubuntu 24.04. If the script runs successful you will find the binary under dino/build/
+this script installs the XMPP client Dino under an Ubuntu 24.04. (on Ubuntu 26.04 you install meson not meson-1.5) If the script runs successful you will find the binary under dino/build/
 
 It will download the source in version v0.4.4, and compiles it.
 
