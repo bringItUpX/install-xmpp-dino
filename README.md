@@ -14,7 +14,7 @@ sudo bash videocallWithConversationsPossible-download-and-compile-dino-newest.sh
 
 if all runs successful, after the above command you can run dino with the command:
 ```Shell
-./dino/build/dino
+./dino/build/main/dino
 ```
 
 hint:
