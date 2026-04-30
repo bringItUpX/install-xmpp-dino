@@ -5,11 +5,11 @@ It will download the source in version v0.4.4, and compiles it.
 
 you only need to download the script install-dino.sh in a diretory, then open a terminal in this directory and run:
 ```Shell
-sudo bash install-dino.sh
+sudo bash install-dino-0.4.4.sh
 ```
 for the newer version with meson build (since dino 0.5.0) use the newer script in this repo
 ```Shell
-sudo bash download-and-compile-dino0.5.2.sh
+sudo bash videocallWithConversationsPossible-download-and-compile-dino-newest.sh
 ```
 
 if all runs successful, after the above command you can run dino with the command:
