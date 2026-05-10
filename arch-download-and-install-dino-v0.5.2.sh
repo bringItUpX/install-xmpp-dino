@@ -13,7 +13,7 @@ BUILD_ENV="base-devel gcc meson gettext glib2 gtk4 icu libgee qrencode ninja sql
 printf "Install arch-based dependencies to install dino \n"
 
 # install packages (only needed ones to avoid reinstalling)
-sudo pacman -S --noconfirm --needed $DEPS $BUILD_ENV > compile-dino.log 2>&1
+sudo pacman -Sy --noconfirm --needed $DEPS $BUILD_ENV > compile-dino.log 2>&1
 
 # clone the dino github repository
 printf "Clone the latest dino version from github repo into the working directoy $DINO_BUILD_DIR_NAME\n"
@@ -32,7 +32,7 @@ meson compile -C build >> compile-dino.log 2>&1
 printf "install dino \n"
 
 sudo meson install -C build --no-rebuild >> compile-dino.log 2>&1
-echo '/usr/local/lib' | sudo tee -a /etc/ld.so.conf.d/local.conf
+echo '/usr/local/lib' | sudo tee -a /etc/ld.so.conf.d/local.conf >> compile-dino.log 2>&1
 sudo ldconfig
 
 printf "Finished installing dino\n"
