@@ -8,7 +8,7 @@ DINO_BUILD_DIR_NAME="dino"
 # dependencies for dino
 DEPS="webrtc-audio-processing libomemo-c"
 # dependencies for building dino from source
-BUILD_ENV="base-devel gcc meson gettext glib2 gtk4 icu libgee qrencode ninja sqlite vala gpgme libgcrypt libsrtp glib-networking libnice libsoup gst-plugins-good gst-plugins-bad gst-plugins-ugly"
+BUILD_ENV="base-devel gcc meson gettext glib2 gtk4 icu libgee>=0.10 qrencode ninja sqlite vala gpgme libgcrypt libsrtp glib-networking libnice libsoup gst-plugins-good gst-plugins-bad gst-plugins-ugly libadwaita gstreamer gst-plugins-base"
 
 printf "Install arch-based dependencies to install dino \n"
 
@@ -22,7 +22,7 @@ cd $DINO_BUILD_DIR_NAME
 # prepare the build process
 printf "Prepapre the build\n"
 meson setup --reconfigure build \
- -Dplugin-rtp-h264=enabled -Dplugin-rtp-vaapi=enabled -Dplugin-rtp-vp9=enabled -Dplugin-rtp-msdk=enabled -Dplugin-rtp-webrtc-audio-processing=enabled \
+ -Dplugin-rtp-h264=enabled -Dplugin-rtp-vaapi=enabled -Dplugin-rtp-msdk=enabled -Dplugin-rtp-webrtc-audio-processing=enabled \
  --wipe >> compile-dino.log 2>&1
 # actual build dino
 printf "build dino from source\n"
