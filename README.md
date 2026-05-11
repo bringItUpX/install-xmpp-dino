@@ -1,4 +1,6 @@
 # install-xmpp-dino
+## Ubuntu > 24.04.
+
 this script installs the XMPP client Dino under an Ubuntu 24.04. (on Ubuntu 26.04 you install meson not meson-1.5) If the script runs successful you will find the binary under dino/build/
 
 It will download the source in version v0.4.4, and compiles it.
@@ -29,3 +31,10 @@ Dino is able to do Voicecalls and Videocalls with this installation. but your se
 
 hint 3:
 for Videocalls with Dino for me it is only working if I put the usb cam lately in the usb port (after the PC is fully booted).
+
+## Arch
+This script is written for all distros using the pacman package manager. For Gnoem desktop an automatic integration is added
+
+```bash
+./arch-download-and-install-dino-v0.5.2.sh
+```
