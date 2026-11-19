@@ -12,6 +12,25 @@
 # incompatibilities 
 shopt -s nocasematch
 
+# Configuration section - set your preferred RTP options here
+# Valid options: h264, vaapi, msdk
+# Set to true to enable, false to disable
+declare -A MESON_PROJECT_OPTIONS=(
+    ["crypto-backend"]=auto # [auto, openssl, gnu] - prefered crypto backend
+    ["omemo"]=enabled # [enabled, disabled, auto] - end-to-end encryption using OMEMO
+    [openpgp]=auto # [enabled, disabled, auto] - end-to-end encyption using PGP
+    ["plugin-notification-sound"]=disabled # [enabled, disabled, auto] - sound for chat notification
+    ["plugindir"]=dino/plugin # dino plugin directory, relative to libdir
+    ["rtp-h264"]=true # [true, false] - voice/video calls
+    ["rtp-vaapi"]=true # [true, false] - video accelaeration api
+    ["rtp-msdk"]=true # [true, false] - intel mediaSDK
+    ["rtp-v4l2"]=false # [true, false] - V4L2 API (stateful)
+    ["rtp-v4l2-sl"]=false # [true, false] - V4L2 API (stateless)
+    ["rtp-vp9"]=false # [true, false] - vp 9 codec
+    ["set-install-rpath"]=false # [true, false] - set rpath of installed binaries to the configured libdir
+    ["voice-processing"]=auto # [auto, enabled, disabled] voice processing
+)
+
 # dino download, cloned, build directory
 DINO_BUILD_DIR_NAME="dino"
 
@@ -214,13 +233,21 @@ cd "$DINO_BUILD_DIR_NAME" || exit 1
 
 # Prepare the build process
 printf "Prepare the build\n"
-if ! meson setup \
-  --reconfigure \
-   build \
-  -Drtp-h264=true \
-  -Drtp-vaapi=true \
-  -Drtp-msdk=true \
-  --wipe; then
+
+# Build command with configurable RTP options
+MESON_ARGS=(
+    "--reconfigure"
+    "build"
+)
+
+# Add RTP options based on configuration
+for option in "${!MESON_PROJECT_OPTIONS[@]}"; do
+    MESON_ARGS+=("-D$option=${MESON_PROJECT_OPTIONS[$option]}")
+done
+
+MESON_ARGS+=("--wipe")
+
+if ! meson setup "${MESON_ARGS[@]}"; then
     echo "Meson setup failed. Exiting."
     exit 1
 fi
