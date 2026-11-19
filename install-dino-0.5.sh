@@ -8,25 +8,30 @@
 # - endeavouros
 # - it will integrate in kde, gnome and cinnamon desktop environments automatically
 
-# dino donwload, cloned, build directory
+# set the script to case insensitive string comparison, to avoid
+# incompatibilities 
+shopt -s nocasematch
+
+# dino download, cloned, build directory
 DINO_BUILD_DIR_NAME="dino"
 
 # check the distro by reading the  
 DISTRO=$(source /etc/os-release && echo "$ID")
 
-# set the script to case insensitive string comparison, to avoid
-# incompatibilities 
-shopt -s nocasematch
-
 ################################################################################
 # set distro specific settings for the installations
 # mostly different package names and packagers
 
+PACKAGE_REFRESH_COMMAND=()
+PACKAGE_QUERY_COMMAND=()
+PACKAGE_INSTALL_COMMAND=()
+
 case "$DISTRO" in
     "ubuntu"|"linuxmint")
         DYNAMIC_LIB_PATH="/usr/local/lib"
-        PACKAGE_INSTALL_COMMAND=(apt install -y)
-        PACKAGE_QUERY_COMMAND=()
+        $PACKAGE_REFRESH_COMMAND=(apt update)
+        $PACKAGE_INSTALL_COMMAND=(apt install -y)
+        $PACKAGE_QUERY_COMMAND=(dpkg -l)
         DEPS=(ninja-build
             valac 
             gettext
@@ -54,8 +59,9 @@ case "$DISTRO" in
 
     "fedora") 
         DYNAMIC_LIB_PATH="/usr/local/lib64"
-        PACKAGE_INSTALL_COMMAND=(dnf install -y --refresh --skip-unavailable)
-        PACKAGE_QUERY_COMMAND=(rpm -q --whatprovides)
+        $PACKAGE_REFRESH_COMMAND=(dnf makecache)
+        $PACKAGE_INSTALL_COMMAND=(dnf install -y --refresh --skip-unavailable)
+        $PACKAGE_QUERY_COMMAND=(rpm -q)
         DEPS=(meson
         gcc-c++ 
         cmake 
@@ -92,8 +98,9 @@ case "$DISTRO" in
 
     "endeavouros")
         DYNAMIC_LIB_PATH="/usr/local/lib"
-        PACKAGE_INSTALL_COMMAND=(pacman -Sy --noconfirm --needed)
-        PACKAGE_QUERY_COMMAND=(pacman -Q)
+        $PACKAGE_REFRESH_COMMAND=(pacman -Sy)
+        $PACKAGE_INSTALL_COMMAND=(pacman -Sy --noconfirm --needed)
+        $PACKAGE_QUERY_COMMAND=(pacman -Q)
         DEPS=(base-devel
             gcc
             git
@@ -125,72 +132,116 @@ case "$DISTRO" in
 
     *)
     echo "Distro $DISTRO not supported. Stopping."
-    exit
+    exit 1
 ;;
 
 esac
 
 ###############################################################################
+# Function to check if package is installed 
+check_package_installed() {
+    local pkg=$1
+    if [[ "$PACKAGE_QUERY_COMMAND" == *"rpm -q"* ]]; then
+        # For rpm-based systems, use rpm -q
+        if ! rpm -q "$pkg" >/dev/null 2>&1; then
+            return 1
+        fi
+    elif [[ "$PACKAGE_QUERY_COMMAND" == *"dpkg -l"* ]]; then
+        # For deb-based systems, check if package is installed
+        if ! dpkg -l | grep -q "^ii.*$pkg"; then
+            return 1
+        fi
+    else
+        # For pacman, use pacman -Q
+        if ! pacman -Q "$pkg" >/dev/null 2>&1; then
+            return 1
+        fi
+    fi
+    return 0
+}
 
-printf "Comparing installed / required packages"
+# Check for missing packages
+printf "Checking required packages...\n"
 missing=()
 
 for requirement in "${DEPS[@]}"; do
-  if ! "$PACKAGE_QUERY_COMMAND" "$requirement" >/dev/null 2>&1; then
-    missing+=("$requirement")
-  fi
+    if ! check_package_installed "$requirement"; then
+        missing+=("$requirement")
+    fi
 done
 
-if ((${#missing[@]} == 0)); then
-  echo "All required pkgconfig dependencies are installed."
-  exit 0
+if [[ ${#missing[@]} -eq 0 ]]; then
+    echo "All required packages are installed."
+else
+    printf 'Missing requirements:\n'
+    printf '  - %s\n' "${missing[@]}"
+    
+    read -r -p "Install them now? [y/N] " answer
+    case "$answer" in
+      [yY]|[yY][eE][sS])
+        ;;
+      *)
+        echo "Installation cancelled."
+        exit 1
+        ;;
+    esac
+
+    # Install packages (only needed ones to avoid reinstalling) 
+    if ! sudo "${PACKAGE_REFRESH_COMMAND[@]}"; then
+        echo "Failed to refresh package repositories. Exiting."
+        exit 1
+    fi
+
+    # Install packages (only needed ones to avoid reinstalling) 
+    if ! sudo "${PACKAGE_INSTALL_COMMAND[@]}" "${missing[@]}"; then
+        echo "Failed to install packages. Exiting."
+        exit 1
+    fi
 fi
 
-printf 'Missing requirements:\n'
-printf '  - %s\n' "${missing[@]}"
-
-read -r -p "Install them now? [y/N] " answer
-case "$answer" in
-  [yY]|[yY][eE][sS])
-    ;;
-  *)
-    echo "Installation cancelled."
-    exit
-    ;;
-esac
-
-# Install packages (only needed ones to avoid reinstalling) 
-sudo "${PACKAGE_INSTALL_COMMAND[@]}" "${missing[@]}"
-
+# Remove previous build files
 printf "Removing dino build files from previous run\n"
-rm -rf "$DINO_BUILD_DIR_NAME" 2>/dev/null
+rm -rf "$DINO_BUILD_DIR_NAME" 2>/dev/null || true
 
 # Clone the Dino GitHub repository
 printf "Clone the latest Dino version from GitHub repo into the working directory $DINO_BUILD_DIR_NAME\n"
-git clone https://github.com/dino/dino.git $DINO_BUILD_DIR_NAME 
-cd $DINO_BUILD_DIR_NAME
+if ! git clone https://github.com/dino/dino.git "$DINO_BUILD_DIR_NAME"; then
+    echo "Failed to clone repository. Exiting."
+    exit 1
+fi
+
+cd "$DINO_BUILD_DIR_NAME" || exit 1
 
 # Prepare the build process
 printf "Prepare the build\n"
-meson setup \
+if ! meson setup \
   --reconfigure \
    build \
   -Drtp-h264=true \
   -Drtp-vaapi=true \
   -Drtp-msdk=true \
-  --wipe 
+  --wipe; then
+    echo "Meson setup failed. Exiting."
+    exit 1
+fi
 
 # Build Dino
 printf "Build Dino from source\n"
-meson compile -C build 
+if ! meson compile -C build; then
+    echo "Build failed. Exiting."
+    exit 1
+fi
 
 # Install Dino
 printf "Install Dino\n"
-sudo meson install -C build --no-rebuild 
-printf "adding dino libs to the dynamic linker library\n"
+if ! sudo meson install -C build --no-rebuild; then
+    echo "Installation failed. Exiting."
+    exit 1
+fi
+
+printf "Adding dino libs to the dynamic linker library\n"
 echo "$DYNAMIC_LIB_PATH" | sudo tee -a /etc/ld.so.conf.d/local.conf > /dev/null
 sudo ldconfig
 
 printf "Finished installing Dino\n"
-printf "You can type 'dino' in the terminal or find dino the distributions
-application list\n"
+printf "You can type 'dino' in the terminal or find dino in your distribution's application list\n"
