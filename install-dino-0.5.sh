@@ -29,9 +29,9 @@ PACKAGE_INSTALL_COMMAND=()
 case "$DISTRO" in
     "ubuntu"|"linuxmint")
         DYNAMIC_LIB_PATH="/usr/local/lib"
-        $PACKAGE_REFRESH_COMMAND=(apt update)
-        $PACKAGE_INSTALL_COMMAND=(apt install -y)
-        $PACKAGE_QUERY_COMMAND=(dpkg -l)
+        PACKAGE_REFRESH_COMMAND=(apt update)
+        PACKAGE_INSTALL_COMMAND=(apt install -y)
+        PACKAGE_QUERY_COMMAND=(dpkg -l)
         DEPS=(ninja-build
             valac 
             gettext
@@ -59,9 +59,9 @@ case "$DISTRO" in
 
     "fedora") 
         DYNAMIC_LIB_PATH="/usr/local/lib64"
-        $PACKAGE_REFRESH_COMMAND=(dnf makecache)
-        $PACKAGE_INSTALL_COMMAND=(dnf install -y --refresh --skip-unavailable)
-        $PACKAGE_QUERY_COMMAND=(rpm -q)
+        PACKAGE_REFRESH_COMMAND=(dnf makecache)
+        PACKAGE_INSTALL_COMMAND=(dnf install -y --refresh --skip-unavailable)
+        PACKAGE_QUERY_COMMAND=(rpm -q)
         DEPS=(meson
         gcc-c++ 
         cmake 
@@ -98,9 +98,9 @@ case "$DISTRO" in
 
     "endeavouros")
         DYNAMIC_LIB_PATH="/usr/local/lib"
-        $PACKAGE_REFRESH_COMMAND=(pacman -Sy)
-        $PACKAGE_INSTALL_COMMAND=(pacman -Sy --noconfirm --needed)
-        $PACKAGE_QUERY_COMMAND=(pacman -Q)
+        PACKAGE_REFRESH_COMMAND=(pacman -Sy)
+        PACKAGE_INSTALL_COMMAND=(pacman -Sy --noconfirm --needed)
+        PACKAGE_QUERY_COMMAND=(pacman -Q)
         DEPS=(base-devel
             gcc
             git
