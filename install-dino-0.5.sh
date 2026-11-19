@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # this script will download (clone git repo), compile and install dino 
-# on the following (tested distributions)
+# on the following (tested distributions), the distribution is detected automatically
 # - ubuntu
+# - linuxmint
 # - fedora
 # - endeavouros
+# - it will integrate in kde, gnome and cinnamon desktop environments automatically
 
 # dino donwload, cloned, build directory
 DINO_BUILD_DIR_NAME="dino"
@@ -21,7 +23,7 @@ shopt -s nocasematch
 # mostly different package names and packagers
 
 case "$DISTRO" in
-    "ubuntu")
+    "ubuntu"|"linuxmint")
         DYNAMIC_LIB_PATH="/usr/local/lib"
         PACKAGE_INSTALL_COMMAND=(apt install -y)
         PACKAGE_QUERY_COMMAND=()
@@ -130,7 +132,7 @@ esac
 
 ###############################################################################
 
-printf "Comparing installed / required packages\n"
+printf "Comparing installed / required packages"
 missing=()
 
 for requirement in "${DEPS[@]}"; do
@@ -156,9 +158,6 @@ case "$answer" in
     exit
     ;;
 esac
-
-
-printf "\nInstalling missing dependencies ${missing[@]} for Dino to '$DISTRO' \n"
 
 # Install packages (only needed ones to avoid reinstalling) 
 sudo "${PACKAGE_INSTALL_COMMAND[@]}" "${missing[@]}"
