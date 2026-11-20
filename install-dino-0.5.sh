@@ -41,14 +41,14 @@ DISTRO=$(source /etc/os-release && echo "$ID")
 # set distro specific settings for the installations
 # mostly different package names and packagers
 
-PACKAGE_UPDATE_COMMAND=""
+PACKAGE_UPDATE_COMMAND=()
 PACKAGE_QUERY_COMMAND=()
 PACKAGE_INSTALL_COMMAND=()
 
 case "$DISTRO" in
     "ubuntu"|"linuxmint")
         DYNAMIC_LIB_PATH="/usr/local/lib"
-        PACKAGE_UPDATE_COMMAND="apt update && apt upgrade -y"
+        PACKAGE_UPDATE_COMMAND=("apt update" "apt upgrade -y")
         PACKAGE_INSTALL_COMMAND=(apt install -y)
         PACKAGE_QUERY_COMMAND=(dpkg -l)
         DEPS=(ninja-build
@@ -78,7 +78,7 @@ case "$DISTRO" in
 
     "fedora") 
         DYNAMIC_LIB_PATH="/usr/local/lib64"
-        PACKAGE_UPDATE_COMMAND="dnf upgrade --refresh"
+        PACKAGE_UPDATE_COMMAND=("dnf upgrade --refresh")
         PACKAGE_INSTALL_COMMAND=(dnf install -y --refresh --skip-unavailable)
         PACKAGE_QUERY_COMMAND=(rpm -q)
         DEPS=(meson
@@ -117,7 +117,7 @@ case "$DISTRO" in
 
     "endeavouros")
         DYNAMIC_LIB_PATH="/usr/local/lib"
-        PACKAGE_UPDATE_COMMAND="pacman -Syu"
+        PACKAGE_UPDATE_COMMAND=("pacman -Syu")
         PACKAGE_INSTALL_COMMAND=(pacman -Sy --noconfirm --needed)
         PACKAGE_QUERY_COMMAND=(pacman -Q)
         DEPS=(base-devel
@@ -185,10 +185,12 @@ check_package_installed() {
 read -r -p "Update packages before installing Dino (recommended)? [y/N] " answer
 case "$answer" in
     [yY]|[yY][eE][sS])
-    if ! sudo bash -c "$PACKAGE_UPDATE_COMMAND"; then
-        echo "Failed to refresh and update package repositories. Exiting."
-        exit 1
-    fi
+    for upCmd in "${PACKAGE_UPDATE_COMMAND[@]}"; do
+        if ! sudo bash -c "$upCmd"; then
+            echo "Failed: $upCmd. Exiting" >&2
+            exit 1
+        fi
+    done
     ;;
     *)
     echo "Package Update. Skipped."
