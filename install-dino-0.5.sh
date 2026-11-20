@@ -12,9 +12,10 @@
 # incompatibilities 
 shopt -s nocasematch
 
-# Configuration section - set your preferred RTP options here
-# Valid options: h264, vaapi, msdk
-# Set to true to enable, false to disable
+# Configuration section - set your preferred plugin options here
+###############################################################################
+# meson build options for dino, taken from the project
+# valid values have been added as comment
 declare -A MESON_PROJECT_OPTIONS=(
     ["crypto-backend"]=auto # [auto, openssl, gnu] - prefered crypto backend
     ["omemo"]=enabled # [enabled, disabled, auto] - end-to-end encryption using OMEMO
@@ -30,9 +31,10 @@ declare -A MESON_PROJECT_OPTIONS=(
     ["set-install-rpath"]=false # [true, false] - set rpath of installed binaries to the configured libdir
     ["voice-processing"]=auto # [auto, enabled, disabled] voice processing
 )
-
 # dino download, cloned, build directory
 DINO_BUILD_DIR_NAME="dino"
+
+###############################################################################
 
 # check the distro by reading the  
 DISTRO=$(source /etc/os-release && echo "$ID")
@@ -179,12 +181,12 @@ check_package_installed() {
     return 0
 }
 
-
 # Refresh current package repositories and install missing packages 
 
-read -r -p "Update packages before installing Dino (recommended)? [y/N] " answer
+read -r -p "Update system packages before building and installing Dino (recommended)? [y/N] " answer
 case "$answer" in
     [yY]|[yY][eE][sS])
+    echo "Updating system packages."
     for upCmd in "${PACKAGE_UPDATE_COMMAND[@]}"; do
         if ! sudo bash -c "$upCmd"; then
             echo "Failed: $upCmd. Exiting" >&2
@@ -193,14 +195,13 @@ case "$answer" in
     done
     ;;
     *)
-    echo "Package Update. Skipped."
+    echo "Package update skipped."
     ;;
 esac
 
 
-
 # Check for missing packages
-printf "Checking required packages...\n"
+echo "Checking required packages..."
 missing=()
 
 for requirement in "${DEPS[@]}"; do
@@ -209,10 +210,11 @@ for requirement in "${DEPS[@]}"; do
     fi
 done
 
+# install missing required packages 
 if [[ ${#missing[@]} -eq 0 ]]; then
     echo "All required packages are installed."
 else
-    printf 'Missing requirements:\n'
+    echo "Missing requirements:"
     printf '  - %s\n' "${missing[@]}"
     
     read -r -p "Install them now? [y/N] " answer
@@ -232,12 +234,12 @@ else
     fi
 fi
 
-# Remove previous build files
-printf "Removing dino build files from previous run\n"
+# remove previous build files by deleting the build dir to get a 'fresh' version
+echo "Removing dino build files from previous run"
 rm -rf "$DINO_BUILD_DIR_NAME" 2>/dev/null || true
 
 # Clone the Dino GitHub repository
-printf "Clone the latest Dino version from GitHub repo into the working directory $DINO_BUILD_DIR_NAME\n"
+echo "Clone the latest Dino version from GitHub repo into the working directory $DINO_BUILD_DIR_NAME"
 if ! git clone https://github.com/dino/dino.git "$DINO_BUILD_DIR_NAME"; then
     echo "Failed to clone repository. Exiting."
     exit 1
@@ -246,7 +248,7 @@ fi
 cd "$DINO_BUILD_DIR_NAME" || exit 1
 
 # Prepare the build process
-printf "Prepare the build\n"
+echo "Prepare the build"
 
 # Build command with configurable RTP options
 MESON_ARGS=(
@@ -280,7 +282,7 @@ case "$answer" in
 esac
 
 # Build Dino
-printf "Build Dino from source\n"
+echo "Build Dino from source"
 if ! meson compile -C build; then
     echo "Build failed. Exiting."
     exit 1
@@ -298,16 +300,15 @@ case "$answer" in
         ;;
 esac
 
-# Install Dino
-printf "Install Dino\n"
+# Install Dino to the system
 if ! sudo meson install -C build --no-rebuild; then
     echo "Installation failed. Exiting."
     exit 1
 fi
 
-printf "Adding dino libs to the dynamic linker library\n"
+echo "Adding dino libs to the dynamic linker library"
 echo "$DYNAMIC_LIB_PATH" | sudo tee -a /etc/ld.so.conf.d/local.conf > /dev/null
 sudo ldconfig
 
-printf "Finished installing Dino\n"
-printf "You can type 'dino' in the terminal or find dino in your distribution's application list\n"
+echo "Finished installing Dino"
+echo "You can type 'dino' in the terminal or find dino in your distribution's application list"
