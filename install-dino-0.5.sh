@@ -254,17 +254,30 @@ MESON_ARGS=(
     "build"
 )
 
-# Add RTP options based on configuration
+# Add plugin options based on configuration
 for option in "${!MESON_PROJECT_OPTIONS[@]}"; do
     MESON_ARGS+=("-D$option=${MESON_PROJECT_OPTIONS[$option]}")
 done
 
 MESON_ARGS+=("--wipe")
 
+# run meson set up with the provided arguments, exit when failed
 if ! meson setup "${MESON_ARGS[@]}"; then
     echo "Meson setup failed. Exiting."
     exit 1
 fi
+
+# wait for user input before proceeding with the build
+read -r -p "Proceed with building dino from source? [y/N] " answer
+case "$answer" in
+    [yY]|[yY][eE][sS])
+        echo "Starting build process..."
+        ;;
+    *)
+        echo "Dino installation cancelled."
+        exit 1
+        ;;
+esac
 
 # Build Dino
 printf "Build Dino from source\n"
@@ -272,6 +285,18 @@ if ! meson compile -C build; then
     echo "Build failed. Exiting."
     exit 1
 fi
+
+# wait for user input before proceeding with the build
+read -r -p "Install dino to the system? " answer
+case "$answer" in
+    [yY]|[yY][eE][sS])
+        echo "Start installing..."
+        ;;
+    *)
+        echo "Dino installation cancelled."
+        exit 1
+        ;;
+esac
 
 # Install Dino
 printf "Install Dino\n"
