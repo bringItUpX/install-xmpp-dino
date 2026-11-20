@@ -201,7 +201,7 @@ esac
 
 
 # Check for missing packages
-echo "Checking required packages..."
+echo "Checking required packages for building dino..."
 missing=()
 
 for requirement in "${DEPS[@]}"; do
@@ -289,7 +289,7 @@ if ! meson compile -C build; then
 fi
 
 # wait for user input before proceeding with the build
-read -r -p "Install dino to the system? " answer
+read -r -p "Install dino to the system? [y/N] " answer
 case "$answer" in
     [yY]|[yY][eE][sS])
         echo "Start installing..."
