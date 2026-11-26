@@ -17,19 +17,19 @@ shopt -s nocasematch
 # meson build options for dino, taken from the project
 # valid values have been added as comment
 declare -A MESON_PROJECT_OPTIONS=(
-    ["crypto-backend"]=auto # [auto, openssl, gnu] - prefered crypto backend
-    ["omemo"]=enabled # [enabled, disabled, auto] - end-to-end encryption using OMEMO
-    [openpgp]=auto # [enabled, disabled, auto] - end-to-end encyption using PGP
-    ["plugin-notification-sound"]=disabled # [enabled, disabled, auto] - sound for chat notification
-    ["plugindir"]=dino/plugin # dino plugin directory, relative to libdir
+    # ["crypto-backend"]=auto # [auto, openssl, gnu] - prefered crypto backend
+    # ["omemo"]=enabled # [enabled, disabled, auto] - end-to-end encryption using OMEMO
+    # [openpgp]=auto # [enabled, disabled, auto] - end-to-end encyption using PGP
+    # ["plugin-notification-sound"]=disabled # [enabled, disabled, auto] - sound for chat notification
+    # ["plugindir"]=dino/plugin # dino plugin directory, relative to libdir
     ["rtp-h264"]=true # [true, false] - voice/video calls
     ["rtp-vaapi"]=true # [true, false] - video accelaeration api
     ["rtp-msdk"]=true # [true, false] - intel mediaSDK
-    ["rtp-v4l2"]=false # [true, false] - V4L2 API (stateful)
-    ["rtp-v4l2-sl"]=false # [true, false] - V4L2 API (stateless)
+    # ["rtp-v4l2"]=false # [true, false] - V4L2 API (stateful)
+    # ["rtp-v4l2-sl"]=false # [true, false] - V4L2 API (stateless)
     ["rtp-vp9"]=false # [true, false] - vp 9 codec
-    ["set-install-rpath"]=false # [true, false] - set rpath of installed binaries to the configured libdir
-    ["voice-processing"]=auto # [auto, enabled, disabled] voice processing
+    # ["set-install-rpath"]=false # [true, false] - set rpath of installed binaries to the configured libdir
+    ["voice-processing"]=enabled # [auto, enabled, disabled] voice processing
 )
 # dino download, cloned, build directory
 DINO_BUILD_DIR_NAME="dino"
