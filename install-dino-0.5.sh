@@ -44,7 +44,6 @@ DISTRO=$(source /etc/os-release && echo "$ID")
 # mostly different package names and packagers
 
 PACKAGE_UPDATE_COMMAND=()
-PACKAGE_QUERY_COMMAND=()
 PACKAGE_INSTALL_COMMAND=()
 
 case "$DISTRO" in
@@ -52,7 +51,7 @@ case "$DISTRO" in
         DYNAMIC_LIB_PATH="/usr/local/lib"
         PACKAGE_UPDATE_COMMAND=("apt update" "apt upgrade -y")
         PACKAGE_INSTALL_COMMAND=(apt install -y)
-        PACKAGE_QUERY_COMMAND=(dpkg -l)
+        PACKAGE_QUERY_COMMAND() { dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"; }
         DEPS=(ninja-build
             valac 
             gettext
@@ -82,7 +81,7 @@ case "$DISTRO" in
         DYNAMIC_LIB_PATH="/usr/local/lib64"
         PACKAGE_UPDATE_COMMAND=("dnf upgrade --refresh")
         PACKAGE_INSTALL_COMMAND=(dnf install -y --refresh --skip-unavailable)
-        PACKAGE_QUERY_COMMAND=(rpm -q)
+        PACKAGE_QUERY_COMMAND() { rpm -q "$1" >/dev/null 2>&1; }
         DEPS=(meson
         gcc-c++ 
         cmake 
@@ -121,7 +120,7 @@ case "$DISTRO" in
         DYNAMIC_LIB_PATH="/usr/local/lib"
         PACKAGE_UPDATE_COMMAND=("pacman -Syu")
         PACKAGE_INSTALL_COMMAND=(pacman -Sy --noconfirm --needed)
-        PACKAGE_QUERY_COMMAND=(pacman -Q)
+        PACKAGE_QUERY_COMMAND() { pacman -Q "$1" >/dev/null 2>&1; }
         DEPS=(base-devel
             gcc
             git
@@ -158,29 +157,6 @@ case "$DISTRO" in
 
 esac
 
-###############################################################################
-# Function to check if package is installed 
-check_package_installed() {
-    local pkg=$1
-    if [[ "$PACKAGE_QUERY_COMMAND" == *"rpm -q"* ]]; then
-        # For rpm-based systems, use rpm -q
-        if ! rpm -q "$pkg" >/dev/null 2>&1; then
-            return 1
-        fi
-    elif [[ "$PACKAGE_QUERY_COMMAND" == *"dpkg -l"* ]]; then
-        # For deb-based systems, check if package is installed
-        if ! dpkg -l | grep -q "^ii.*$pkg"; then
-            return 1
-        fi
-    else
-        # For pacman, use pacman -Q
-        if ! pacman -Q "$pkg" >/dev/null 2>&1; then
-            return 1
-        fi
-    fi
-    return 0
-}
-
 # Refresh current package repositories and install missing packages 
 
 read -r -p "Update system packages before building and installing Dino (recommended)? [y/N] " answer
@@ -205,7 +181,7 @@ echo "Checking required packages for building dino..."
 missing=()
 
 for requirement in "${DEPS[@]}"; do
-    if ! check_package_installed "$requirement"; then
+    if ! PACKAGE_QUERY_COMMAND "$requirement"; then
         missing+=("$requirement")
     fi
 done
