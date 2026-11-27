@@ -81,7 +81,7 @@ case "$DISTRO" in
         DYNAMIC_LIB_PATH="/usr/local/lib64"
         PACKAGE_UPDATE_COMMAND=("dnf upgrade --refresh")
         PACKAGE_INSTALL_COMMAND=(dnf install -y --refresh --skip-unavailable)
-        PACKAGE_QUERY_COMMAND() { rpm -q "$1" >/dev/null 2>&1; }
+        PACKAGE_QUERY_COMMAND() { rpm -q --whatprovides "$1" >/dev/null 2>&1; }
         DEPS=(meson
         gcc-c++ 
         cmake 
@@ -112,7 +112,7 @@ case "$DISTRO" in
         'pkgconfig(gstreamer-video-1.0)'
         'pkgconfig(nice)'
         'pkgconfig(libsrtp2)'
-        'pkgconfig(webrtc-audio-processing'
+        'pkgconfig(webrtc-audio-processing)'
         )
     ;;
 
