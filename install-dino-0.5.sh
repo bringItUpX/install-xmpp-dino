@@ -12,14 +12,18 @@
 # incompatibilities 
 shopt -s nocasematch
 ###############################################################################
-GREEN="\033[1;32m"
-RED="\033[1;31m"
+# output colors
+GREEN="\033[1;32m" # green bold
+RED="\033[1;31m" # red bold
 NC="\033[0m"   # no color / reset
 
+# printing to console helper functions
+# prints normal output
 printf_info()  { printf '%s%b\n' "$*" "$NC"; }
+# prints red, bold output
 printf_error() { printf '%b%s%b\n' "$RED" "$*" "$NC" >&2; }
+# prints green, bold output
 printf_success() { printf '%b%s%b\n' "$GREEN" "$*" "$NC" >&2; }
-
 
 # Configuration section - set your preferred plugin options here
 ###############################################################################
