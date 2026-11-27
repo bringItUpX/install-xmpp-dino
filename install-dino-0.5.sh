@@ -11,6 +11,15 @@
 # set the script to case insensitive string comparison, to avoid
 # incompatibilities 
 shopt -s nocasematch
+###############################################################################
+GREEN="\033[1;32m"
+RED="\033[1;31m"
+NC="\033[0m"   # no color / reset
+
+printf_info()  { printf '%s%b\n' "$*" "$NC"; }
+printf_error() { printf '%b%s%b\n' "$RED" "$*" "$NC" >&2; }
+printf_success() { printf '%b%s%b\n' "$GREEN" "$*" "$NC" >&2; }
+
 
 # Configuration section - set your preferred plugin options here
 ###############################################################################
@@ -165,19 +174,19 @@ case "$answer" in
     echo "Updating system packages."
     for upCmd in "${PACKAGE_UPDATE_COMMAND[@]}"; do
         if ! sudo bash -c "$upCmd"; then
-            echo "Failed: $upCmd. Exiting" >&2
+            printf_error "Failed: $upCmd. Exiting" >&2
             exit 1
         fi
     done
     ;;
     *)
-    echo "Package update skipped."
+    printf_error "Package update skipped."
     ;;
 esac
 
 
 # Check for missing packages
-echo "Checking required packages for building dino..."
+printf_info "Checking required packages for building dino..."
 missing=()
 
 for requirement in "${DEPS[@]}"; do
@@ -188,9 +197,9 @@ done
 
 # install missing required packages 
 if [[ ${#missing[@]} -eq 0 ]]; then
-    echo "All required packages are installed."
+    printf_success "All required packages are installed."
 else
-    echo "Missing requirements:"
+    printf_info "Missing requirements:"
     printf '  - %s\n' "${missing[@]}"
     
     read -r -p "Install them now? [y/N] " answer
@@ -198,33 +207,38 @@ else
       [yY]|[yY][eE][sS])
         ;;
       *)
-        echo "Installation cancelled."
+        printf_error "Installation cancelled."
         exit 1
         ;;
     esac
 
     # Install packages (only needed ones to avoid reinstalling) 
     if ! sudo "${PACKAGE_INSTALL_COMMAND[@]}" "${missing[@]}"; then
-        echo "Failed to install packages. Exiting."
+        printf_error "Failed to install packages. Exiting."
         exit 1
     fi
 fi
 
 # remove previous build files by deleting the build dir to get a 'fresh' version
-echo "Removing dino build files from previous run"
+printf_info "Removing dino build files from previous run"
 rm -rf "$DINO_BUILD_DIR_NAME" 2>/dev/null || true
 
 # Clone the Dino GitHub repository
-echo "Clone the latest Dino version from GitHub repo into the working directory $DINO_BUILD_DIR_NAME"
+printf_info "Clone the latest Dino version from GitHub repo into the working directory $DINO_BUILD_DIR_NAME"
 if ! git clone https://github.com/dino/dino.git "$DINO_BUILD_DIR_NAME"; then
-    echo "Failed to clone repository. Exiting."
+    printf_error "Failed to clone repository. Exiting."
     exit 1
 fi
 
-cd "$DINO_BUILD_DIR_NAME" || exit 1
+printf_success "Successfully cloned repository"
+
+if ! cd "$DINO_BUILD_DIR_NAME"; then
+    FP=$(realpath -m "$DINO_BUILD_DIR_NAME")
+    printf_error "Failed to enter cloned repository ("$DINO_BUILD_DIR_NAME"). Exiting."; exit 1
+fi
 
 # Prepare the build process
-echo "Prepare the build"
+printf_info "Prepare the build"
 
 # Build command with configurable RTP options
 MESON_ARGS=(
@@ -241,7 +255,7 @@ MESON_ARGS+=("--wipe")
 
 # run meson set up with the provided arguments, exit when failed
 if ! meson setup "${MESON_ARGS[@]}"; then
-    echo "Meson setup failed. Exiting."
+    printf_error "Meson setup failed. Exiting."
     exit 1
 fi
 
@@ -249,18 +263,18 @@ fi
 read -r -p "Proceed with building dino from source? [y/N] " answer
 case "$answer" in
     [yY]|[yY][eE][sS])
-        echo "Starting build process..."
+        printf_info "Starting build process..."
         ;;
     *)
-        echo "Dino installation cancelled."
+        printf_error "Dino installation cancelled."
         exit 1
         ;;
 esac
 
 # Build Dino
-echo "Build Dino from source"
+printf_info "Build Dino from source"
 if ! meson compile -C build; then
-    echo "Build failed. Exiting."
+    printf_error "Build failed. Exiting."
     exit 1
 fi
 
@@ -268,23 +282,23 @@ fi
 read -r -p "Install dino to the system? [y/N] " answer
 case "$answer" in
     [yY]|[yY][eE][sS])
-        echo "Start installing..."
+        printf_info "Start installing..."
         ;;
     *)
-        echo "Dino installation cancelled."
+        printf_error "Dino installation cancelled."
         exit 1
         ;;
 esac
 
 # Install Dino to the system
 if ! sudo meson install -C build --no-rebuild; then
-    echo "Installation failed. Exiting."
+    printf_error "Installation failed. Exiting."
     exit 1
 fi
 
-echo "Adding dino libs to the dynamic linker library"
+printf_info "Adding dino libs to the dynamic linker library"
 echo "$DYNAMIC_LIB_PATH" | sudo tee -a /etc/ld.so.conf.d/local.conf > /dev/null
 sudo ldconfig
 
-echo "Finished installing Dino"
-echo "You can type 'dino' in the terminal or find dino in your distribution's application list"
+printf_success "Finished installing Dino"
+printf_success "You can type 'dino' in the terminal or find dino in your distribution's application list"
